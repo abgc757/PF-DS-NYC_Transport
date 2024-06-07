@@ -24,6 +24,7 @@ def resumen(dfs):
     resultados = []
     no = 0
     for j in dfs:
+        j['wait_time'] = pd.to_timedelta(j['wait_time'])
         res = {"interacion": no,"trip_time":timedelta(minutes=j['trip_time'].sum()),
             "trip_time_mean":timedelta(minutes=j['trip_time'].mean()),
             "wait_time":j['wait_time'].sum(),
@@ -54,6 +55,7 @@ def interpolacion(Modelo:str, Año:int, electrico:bool,dfs:list,hour_0,hour_f):
         Mantenimiento = filtro['Costo_mant_anual'].iloc[0]
         costo_gas = filtro['Costo_gasolina_galon'].iloc[0]
     for i in dfs:
+        i['Hour_0'] = pd.to_timedelta(i['Hour_0'])
         i = i[(i['Hour_0'] >= hour_0) & (i['Hour_0'] <= hour_f)]
         i['CO2_emission'] = i['trip_distance'] * co2 * 1.609
         i['Mantenimiento_anual'] = Mantenimiento
@@ -65,11 +67,11 @@ def interpolacion(Modelo:str, Año:int, electrico:bool,dfs:list,hour_0,hour_f):
 #cargar el dataset
 dfs = []
 for i in range(1,1001):
-    df = pd.read_parquet(f"Data_sim/{i}.parquet")
+    df = pd.read_csv(f"Data_sim/{i}.csv")
     dfs.append(df)
 
-electric = pd.read_parquet('Data_sim/df_final_electrico01.parquet')
-fuel = pd.read_parquet('Data_sim/Eda_fuel_vehicles.parquet')
+electric = pd.read_csv('Data_sim/df_final_electrico01.csv')
+fuel = pd.read_csv('Data_sim/Eda_fuel_vehicles.csv')
 # df = pd.read_parquet('Data_sim/VgasElect.parquet')
 
 #Generando lista de vehiculos
