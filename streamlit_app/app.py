@@ -3,6 +3,7 @@ import streamlit as st
 import numpy as np  
 # import plotly_express as px
 from datetime import timedelta
+import pyarrow
 
 #crear pagina
 st.set_page_config(page_title=  "Modelo de simulación",
@@ -17,14 +18,12 @@ color4 = "#E9F2EB"
 color5 = "#8C8372"
 
 # Funciones del Modelo de Machine Learning
-
 #Función resumen, provee un resumen del conjunto de datos simulados, genera un unico DataFrame con el promedio de
 #de cada una de las variables de interés.
 def resumen(dfs):
     resultados = []
     no = 0
     for j in dfs:
-        j['wait_time'] = pd.to_timedelta(j['wait_time'])
         res = {"interacion": no,"trip_time":timedelta(minutes=j['trip_time'].sum()),
             "trip_time_mean":timedelta(minutes=j['trip_time'].mean()),
             "wait_time":j['wait_time'].sum(),
@@ -36,10 +35,25 @@ def resumen(dfs):
         resultados.append(res)
         no += 1
     return pd.DataFrame(resultados).describe()
+    with col1:
+        # Content for the first (narrower) column goes here
+        st.write("Ingrese el inventario de sus vehiculos")
+
+
+    with col2:
+        # Content for the second (wider) column goes here
+        st.write("Aca se muestra el resultado de la simulacion de la Huella de carbono")
+        # Fill with image placeholder with full width and height
+        st.image("https://via.placeholder.com/800x400", use_column_width=True, caption="Image Placeholder")
+        
+
+    
+
 
 
 #Función interpolación empata los datos especificos del vehiculo seleccionado y devuelve genera costos y emisiones 
 #de CO2. 
+
 
 
 def interpolacion(Modelo:str, Año:int, electrico:bool,dfs:list,hour_0,hour_f):
@@ -55,7 +69,6 @@ def interpolacion(Modelo:str, Año:int, electrico:bool,dfs:list,hour_0,hour_f):
         Mantenimiento = filtro['Costo_mant_anual'].iloc[0]
         costo_gas = filtro['Costo_gasolina_galon'].iloc[0]
     for i in dfs:
-        i['Hour_0'] = pd.to_timedelta(i['Hour_0'])
         i = i[(i['Hour_0'] >= hour_0) & (i['Hour_0'] <= hour_f)]
         i['CO2_emission'] = i['trip_distance'] * co2 * 1.609
         i['Mantenimiento_anual'] = Mantenimiento
@@ -64,14 +77,15 @@ def interpolacion(Modelo:str, Año:int, electrico:bool,dfs:list,hour_0,hour_f):
         lista.append(i)
     return resumen(lista)
 
+
 #cargar el dataset
 dfs = []
 for i in range(1,1001):
-    df = pd.read_csv(f"Data_sim/{i}.csv")
+    df = pd.read_parquet(f'streamlit_app/Data_sim/{i}.parquet')
     dfs.append(df)
 
-electric = pd.read_csv('Data_sim/df_final_electrico01.csv')
-fuel = pd.read_csv('Data_sim/Eda_fuel_vehicles.csv')
+electric = pd.read_parquet('streamlit_app/Data_sim/df_final_electrico01.parquet')
+fuel = pd.read_parquet('streamlit_app/Data_sim/Eda_fuel_vehicles.parquet')
 # df = pd.read_parquet('Data_sim/VgasElect.parquet')
 
 #Generando lista de vehiculos
